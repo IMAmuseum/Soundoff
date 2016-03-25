@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the soundoff_features feature.
+ */
+
+include_once 'soundoff_features.features.inc';

@@ -1,0 +1,11 @@
+name = SoundOff Features
+description = features necessary for the soundoff module
+core = 7.x
+package = Other
+php = 5.2.4
+dependencies[] = features
+dependencies[] = file
+features[features_api][] = api:1
+features[field][] = node-sound-field_command
+features[field][] = node-sound-field_files
+features[node][] = sound

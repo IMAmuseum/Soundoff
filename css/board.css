@@ -1,0 +1,52 @@
+.playerContainer {
+	padding: 5px;
+	background-color: #444;
+	color: #fff;
+	min-height: 30px;
+}
+
+.playerPlayer {
+	height: 30px;
+	width: 30px;
+	float: left;
+}
+
+.playerStatus {
+	padding: 5px;
+	margin-left: 40px;
+}
+
+.playerPlayer.on {
+	background: #0f0 url('../img/speaker_on.png') no-repeat center;
+}
+
+.playerPlayer.off {
+	background: #f00 url('../img/speaker_off.png') no-repeat center;
+}
+
+.commands {
+	background-color: #000;
+	color: #eee;
+}
+
+.commands:after {
+	content: "";
+	clear: both;
+	display: block;
+}
+
+.command {
+	margin: 5px;
+	padding: 10px;
+	text-align: center;
+	float: left;
+	width: 100px;
+	height: 30px;
+	display: inline-block;
+	background-color: #444;
+	border: 1px solid #ccc;
+}
+
+.command:hover {
+	background-color: #0AA;
+}

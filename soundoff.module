@@ -1,0 +1,136 @@
+<?php
+
+function soundoff_menu() {
+    $items['soundoff/board'] = array(
+        'title' => 'Soundboard',
+        'page callback' => 'soundoff_board',
+        'access callback' => TRUE,
+        'type' => MENU_NORMAL_ITEM
+    );
+
+    $items['soundoff/commands'] = array(
+        'page callback' => 'soundoff_commands',
+        'access callback' => TRUE,
+        'type' => MENU_CALLBACK
+    );
+
+    $items['soundoff/commands/%'] = array(
+        'page callback' => 'soundoff_play',
+        'page arguments' => array(2),
+        'access callback' => TRUE,
+        'type' => MENU_CALLBACK
+    );
+
+    $items['soundoff/status'] = array(
+        'page callback' => 'soundoff_status',
+        'access callback' => TRUE,
+        'type' => MENU_CALLBACK
+    );
+
+    $items['soundoff/play'] = array(
+        'page callback' => 'soundoff_play',
+        'access callback' => TRUE,
+        'type' => MENU_CALLBACK
+    );
+
+    return $items;
+}
+
+
+// Returns all the commands available in JSON format
+function soundoff_commands() {
+    $json = new stdClass();
+    $json->commands = array();
+    $results = db_query('SELECT nid FROM {node} WHERE type = :s', array(':s' => 'sound'));
+    foreach ($results as $result) {
+        $commandNode = node_load($result->nid);
+        $command = new stdClass();
+        $command->title = $commandNode->title;
+        $command->command = $commandNode->field_command['und'][0]['value'];
+        $json->commands[] = $command;
+    }
+    _soundoff_json_response($json);
+    drupal_exit();
+}
+
+function soundoff_play($command = null) {
+    if (isset($_REQUEST['text']) && isset($_REQUEST['token']) && $_REQUEST['token'] == 'YsibwZLVkwN2R8MkStIMtCMm') {
+        $command = trim($_REQUEST['text']);
+    }
+
+    if ($command == 'list') {
+        soundoff_commands();
+    }
+
+    if ($command) {
+        // find the command's node
+        $result = db_query('SELECT entity_id FROM {field_data_field_command} WHERE field_command_value = :command',
+            array(':command' => $command))
+            ->fetchObject();
+        if ($result) {
+            $commandNode = node_load($result->entity_id);
+            // if files are present, pick one randomly
+            if (is_array($commandNode->field_files['und'])) {
+                $randKey = rand(0, (count($commandNode->field_files['und']) - 1));
+                $file = $commandNode->field_files['und'][$randKey];
+                // get the status variable
+                $status = variable_get('soundoff_status', array('serial' => 0, 'url' => '', 'title' => ''));
+                $status['serial'] += 1;
+                $status['url'] = file_create_url($file['uri']);
+                $status['title'] = $commandNode->title;
+                variable_set('soundoff_status', $status);
+            }
+        }
+        // if ($command == 'incoming') {
+        //     // collect commit information for Slack Message
+        //     $payload = json_decode($_POST['payload']);
+        //     if ($payload) {
+        //         $repoName = isset($payload->repository->name) ? $payload->repository->name : 'a repository';
+        //         $commits = isset($payload->commits) ? $payload->commits : array();
+        //         $message = new stdClass;
+        //         $message->text = count($commits)." commit(s) to ".$repoName.":\n";
+        //         foreach ($commits as $commit) {
+        //             $author = 'Some dude';
+        //             if (isset($commit->author->name)) {
+        //                 $author = $commit->author->name;
+        //             }
+        //             elseif (!empty($commit->author)) {
+        //                 $author = $commit->author;
+        //             }
+        //             $message->text .= $author." - ".$commit->message."\n";
+        //         }
+        //         // send message
+        //         $ch = curl_init('https://imalab.slack.com/services/hooks/incoming-webhook?token=DthALLyhUFT0u2FbtyvysgaW');
+        //         curl_setopt($ch, CURLOPT_POST, true);
+        //         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        //         curl_setopt($ch, CURLOPT_POSTFIELDS, array('payload' => json_encode($message)));
+        //         curl_exec($ch);
+        //     }
+        // }
+    }
+    drupal_exit();
+}
+
+function soundoff_status() {
+    $status = variable_get('soundoff_status', array('serial' => 0, 'url' => '', 'title' => ''));
+    _soundoff_json_response($status);
+    drupal_exit();
+}
+
+function soundoff_board() {
+    $path = drupal_get_path('module', 'soundoff');
+    drupal_add_css($path . '/css/board.css');
+    drupal_add_js($path . '/js/jquery.cookie.js');
+    drupal_add_js($path . '/js/board.js');
+    return array();
+}
+
+function _soundoff_json_response($data) {
+    header("Expires: Mon, 26 Jul 1997 05:00:00 GMT" );
+    header("Last-Modified: " . gmdate( "D, d M Y H:i:s" ) . "GMT" );
+    header("Cache-Control: no-cache, must-revalidate" );
+    header("Pragma: no-cache" );
+    header("Content-type: application/json");
+    print json_encode($data);
+}
+

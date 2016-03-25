@@ -1,0 +1,4 @@
+name = "SoundOff"
+description = "Aural notification system"
+core = 7.x
+dependencies[] = soundoff_features
